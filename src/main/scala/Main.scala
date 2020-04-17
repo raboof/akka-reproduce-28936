@@ -32,6 +32,18 @@ class EngineExtension(system: ActorSystem[_]) extends Extension {
   }
 }
 
+
+object ClassicEngineExtension extends akka.actor.ExtensionId[ClassicEngineExtension] with akka.actor.ExtensionIdProvider {
+
+  override def createExtension(system: akka.actor.ExtendedActorSystem): ClassicEngineExtension = new ClassicEngineExtension(system)
+
+  override def lookup(): akka.actor.ExtensionId[_ <: akka.actor.Extension] = ClassicEngineExtension
+}
+
+class ClassicEngineExtension(system: akka.actor.ActorSystem) extends akka.actor.Extension {
+  val engineExtension: EngineExtension = new EngineExtension(system.toTyped)
+}
+
 object Main extends App {
   val system = akka.actor.ActorSystem("reproducer")
 
@@ -39,7 +51,7 @@ object Main extends App {
   implicit val scheduler = system.toTyped.scheduler
   implicit val ec = system.dispatcher
 
-    val engineExtension = EngineExtension(system.toTyped)
+    val engineExtension = ClassicEngineExtension(system).engineExtension
 
     import SessionManager._
     val session = "Foo"
